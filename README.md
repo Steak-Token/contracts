@@ -1,1 +1,1 @@
-# contracts
+# Contracts of STEAK token infrastructure
