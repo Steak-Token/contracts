@@ -9,32 +9,36 @@ contract SteakMarket {
     Steak steak;
 
     address owner;
-    uint steakPerBnb;
+    uint exchangeValue;
     
-    constructor(address _owner, uint _steakPerBnb) public {  
+    constructor(address _owner, uint _exchangeValue) public {  
         owner = _owner;
-        steakPerBnb = _steakPerBnb;
-        steak = Steak(0xcd5b20d5Ad5104C4CC2Fa3eC8c797349152F3989);
+        exchangeValue = _exchangeValue;
+        steak = Steak(0xEe80b739b1d2ADec66AB567D53Cf10eB1985bE81);
+    }
+    
+    function getExchangeValue() public view returns (uint) {
+        return exchangeValue;
     }
 
-    function setSteakPerBnb(uint _steakPerBnb) public {
+    function setExchangeValue(uint _exchangeValue) public {
         require(msg.sender == owner);
-        steakPerBnb = _steakPerBnb;
+        exchangeValue = _exchangeValue;
     }
-
+    
     function exchange() external payable {
-        uint out = msg.value * steakPerBnb;
+        uint out = msg.value * exchangeValue;
         steak.transfer(msg.sender, out);
     }
     
     function cashoutBNB() public {
         require(msg.sender == owner);
-        owner.transfer(address(this).balance);
+        owner.transfer(getBalanceBNB());
     }
-
+    
     function cashoutSTEAK() public {
         require(msg.sender == owner);
-        steak.transfer(owner, steak.balanceOf(address(this)));
+        steak.transfer(owner, getBalanceSTEAK());
     }
     
     function getBalanceBNB() public view returns (uint) {
