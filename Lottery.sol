@@ -4,6 +4,8 @@ contract Steak {
     function transfer(address, uint) public returns (bool) {}
     function transferFrom(address sender, address receiver, uint numTokens) public returns (bool) {}
     function balanceOf(address) public view returns (uint) {}
+    function stake() public pure {}
+    function claim() public pure {}
 }
 
 contract Lottery {
@@ -29,26 +31,36 @@ contract Lottery {
     bool public isLotteryLive;
     uint public maxEntriesForPlayer;
     uint public steakToParticipate;
+    uint public newPotBalance;
+    
+    uint public round;
+    uint public startBlock;
+    uint public roundLength;
+    // Last lottery round
+    string public lastWinner;
+    uint public lastPrice;
 
     // constructor
     function Lottery(string name, address creator) public {
         manager = creator;
         lotteryName = name;
-        steak = Steak(0xEe80b739b1d2ADec66AB567D53Cf10eB1985bE81);
+        steak = Steak(0xCc21403a1967e3C9Fd108D141A43ca36919B7B27);
+        steak.stake();
+        round = 0;
+        newPotBalance = 1000000000000000000000;
+        maxEntriesForPlayer = 6000000000;
+        steakToParticipate = 1000000000000000000000;
+        roundLength = 10000;
+        restart();
     }
 
-    // Let users participate by sending eth directly to contract address
-    function () public payable {
-        // player name will be unknown
-        participate("Unknown");
-    }
-
-    function participate(string playerName) public payable {
+    function participate(string playerName) public {
         require(bytes(playerName).length > 0);
         require(isLotteryLive);
         require(steak.balanceOf(msg.sender) >= steakToParticipate);
         require(players[msg.sender].entryCount < maxEntriesForPlayer);
         
+        steak.claim();
         steak.transferFrom(msg.sender, address(this), steakToParticipate);
 
         if (isNewPlayer(msg.sender)) {
@@ -62,20 +74,29 @@ contract Lottery {
         lotteryBag.push(msg.sender);
     
         // event
-        PlayerParticipated(players[msg.sender].name, players[msg.sender].entryCount);
+        emit PlayerParticipated(players[msg.sender].name, players[msg.sender].entryCount);
+    }
+    
+    function restart() private {
+        activateLottery(maxEntriesForPlayer, steakToParticipate);
+        emit NewRound(round);
     }
 
-    function activateLottery(uint maxEntries, uint steakRequired) public restricted {
+    function activateLottery(uint maxEntries, uint steakRequired) private restricted {
+        round += 1;
+        startBlock = block.number;
         isLotteryLive = true;
         maxEntriesForPlayer = maxEntries == 0 ? 1: maxEntries;
         steakToParticipate = steakRequired == 0 ? 1: steakRequired;
     }
 
-    function declareWinner() public restricted {
+    function declareWinner() public {
         require(lotteryBag.length > 0);
+        require(isRoundOver());
 
         uint index = generateRandomNumber() % lotteryBag.length;
-        steak.transfer(lotteryBag[index], steak.balanceOf(address(this)));
+        uint price = steak.balanceOf(address(this)) - newPotBalance;
+        steak.transfer(lotteryBag[index], price);
          
         winner.name = players[lotteryBag[index]].name;
         winner.entryCount = players[lotteryBag[index]].entryCount;
@@ -87,8 +108,12 @@ contract Lottery {
         // Mark the lottery inactive
         isLotteryLive = false;
     
+        lastWinner = winner.name;
+        lastPrice = price;
+    
         // event
-        WinnerDeclared(winner.name, winner.entryCount);
+        emit WinnerDeclared(winner.name, winner.entryCount);
+        restart();
     }
 
     function getPlayers() public view returns(address[]) {
@@ -103,7 +128,7 @@ contract Lottery {
     }
 
     function getWinningPrice() public view returns (uint) {
-        return this.balance;
+        return steak.balanceOf(address(this)) - newPotBalance;
     }
 
     // Private functions
@@ -118,6 +143,34 @@ contract Lottery {
     function generateRandomNumber() private view returns(uint) {
         return uint(keccak256(block.difficulty, now, lotteryBag));
     }
+    
+    function isRoundOver() public view returns (bool) {
+        if (block.number > startBlock + roundLength) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    function setNewPotBalance(uint _newPotBalance) public {
+        require(msg.sender == manager);
+        newPotBalance = _newPotBalance;
+    }
+    
+    function setMaxEntriesForPlayer(uint _maxEntriesForPlayer) public {
+        require(msg.sender == manager);
+        maxEntriesForPlayer = _maxEntriesForPlayer;
+    }
+    
+    function setSteakToParticipate(uint _steakToParticipate) public {
+        require(msg.sender == manager);
+        steakToParticipate = _steakToParticipate;
+    }
+    
+    function setRoundLength(uint _roundLength) public {
+        require(msg.sender == manager);
+        roundLength = _roundLength;
+    }
 
     // Modifiers
     modifier restricted() {
@@ -126,6 +179,7 @@ contract Lottery {
     }
 
     // Events
-    event WinnerDeclared( string name, uint entryCount );
-    event PlayerParticipated( string name, uint entryCount );
+    event WinnerDeclared(string name, uint entryCount);
+    event PlayerParticipated(string name, uint entryCount);
+    event NewRound(uint round);
 }
