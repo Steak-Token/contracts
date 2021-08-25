@@ -44,7 +44,7 @@ contract Lottery {
     function Lottery(string name, address creator) public {
         manager = creator;
         lotteryName = name;
-        steak = Steak(0xCc21403a1967e3C9Fd108D141A43ca36919B7B27);
+        steak = Steak(0xEe80b739b1d2ADec66AB567D53Cf10eB1985bE81);
         steak.stake();
         round = 0;
         newPotBalance = 1000000000000000000000;
@@ -76,19 +76,6 @@ contract Lottery {
         // event
         emit PlayerParticipated(players[msg.sender].name, players[msg.sender].entryCount);
     }
-    
-    function restart() private {
-        activateLottery(maxEntriesForPlayer, steakToParticipate);
-        emit NewRound(round);
-    }
-
-    function activateLottery(uint maxEntries, uint steakRequired) private restricted {
-        round += 1;
-        startBlock = block.number;
-        isLotteryLive = true;
-        maxEntriesForPlayer = maxEntries == 0 ? 1: maxEntries;
-        steakToParticipate = steakRequired == 0 ? 1: steakRequired;
-    }
 
     function declareWinner() public {
         require(lotteryBag.length > 0);
@@ -116,6 +103,14 @@ contract Lottery {
         restart();
     }
 
+    function isRoundOver() public view returns (bool) {
+        if (block.number > startBlock + roundLength) {
+            return true;
+        }
+        
+        return false;
+    }
+
     function getPlayers() public view returns(address[]) {
         return addressIndexes;
     }
@@ -131,27 +126,6 @@ contract Lottery {
         return steak.balanceOf(address(this)) - newPotBalance;
     }
 
-    // Private functions
-    function isNewPlayer(address playerAddress) private view returns(bool) {
-        if (addressIndexes.length == 0) {
-            return true;
-        }
-        return (addressIndexes[players[playerAddress].index] != playerAddress);
-    }
-
-    // NOTE: This should not be used for generating random number in real world
-    function generateRandomNumber() private view returns(uint) {
-        return uint(keccak256(block.difficulty, now, lotteryBag));
-    }
-    
-    function isRoundOver() public view returns (bool) {
-        if (block.number > startBlock + roundLength) {
-            return true;
-        }
-        
-        return false;
-    }
-    
     function setNewPotBalance(uint _newPotBalance) public {
         require(msg.sender == manager);
         newPotBalance = _newPotBalance;
@@ -172,10 +146,30 @@ contract Lottery {
         roundLength = _roundLength;
     }
 
-    // Modifiers
-    modifier restricted() {
-        require(msg.sender == manager);
-        _;
+    // Private functions
+    function isNewPlayer(address playerAddress) private view returns(bool) {
+        if (addressIndexes.length == 0) {
+            return true;
+        }
+        return (addressIndexes[players[playerAddress].index] != playerAddress);
+    }
+
+    function restart() private {
+        activateLottery(maxEntriesForPlayer, steakToParticipate);
+        emit NewRound(round);
+    }
+
+    function activateLottery(uint maxEntries, uint steakRequired) private {
+        round += 1;
+        startBlock = block.number;
+        isLotteryLive = true;
+        maxEntriesForPlayer = maxEntries == 0 ? 1: maxEntries;
+        steakToParticipate = steakRequired == 0 ? 1: steakRequired;
+    }
+
+    // NOTE: This should not be used for generating random number in real world
+    function generateRandomNumber() private view returns(uint) {
+        return uint(keccak256(block.difficulty, now, lotteryBag));
     }
 
     // Events
