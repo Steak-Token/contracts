@@ -22,7 +22,7 @@ contract SteakV2 {
     using SafeMath for uint256;
 
     constructor(uint256 _startSupply) public {
-        steak_1 = SteakV1(0x0b75693E32A48027cb9966628d9092a88A7D4BCc);
+        steak_1 = SteakV1(0xEe80b739b1d2ADec66AB567D53Cf10eB1985bE81);
 	    balances[msg.sender] = _startSupply;
 	    newSteak = 1000000000000000000;
         claimBlock = block.number;
