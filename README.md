@@ -6,5 +6,4 @@ https://steak-token.com. Feel free to read the code. More details coming soon.
 
 ### BSCMAINNET
 
-- Steak Token - https://bscscan.com/address/0xEe80b739b1d2ADec66AB567D53Cf10eB1985bE81
-- Steak Market - https://bscscan.com/address/0x4A7D6522aAD6027fC4D3cdd72B76C8e36dcb6A09
+- Steak Token - https://bscscan.com/address/0x10f15964b523e0c3ef776a4f91e81c1b8c7c9001
