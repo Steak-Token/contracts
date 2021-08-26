@@ -114,8 +114,8 @@ contract SteakV2 {
     function convert(uint256 numTokens) public {
         require(numTokens <= steak_1.balanceOf(msg.sender));
         steak_1.transferFrom(msg.sender, address(this), numTokens);
-        steak_1.burn(numTokens);
         balances[msg.sender] += numTokens;
+        steak_1.stake();
     }
     
 }
@@ -123,7 +123,7 @@ contract SteakV2 {
 contract SteakV1 {
     function balanceOf(address) public pure returns (uint) {}
     function transferFrom(address, address, uint) public pure returns (bool) {}
-    function burn(uint) public pure {}
+    function stake() public pure {}
 }
 
 library SafeMath { 
