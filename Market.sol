@@ -14,7 +14,7 @@ contract SteakMarket {
     constructor(address _owner, uint _exchangeValue) public {  
         owner = _owner;
         exchangeValue = _exchangeValue;
-        steak = Steak(0xEe80b739b1d2ADec66AB567D53Cf10eB1985bE81);
+        steak = Steak(0xE41E245Aad4C3FeC76F04e95cBe4038E00F53AC8);
     }
     
     function getExchangeValue() public view returns (uint) {

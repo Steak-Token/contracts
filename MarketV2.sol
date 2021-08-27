@@ -31,8 +31,8 @@ contract SteakMarket {
         owner = _owner;
         exchangeValue = _exchangeValue;
         
-        addressSteak = 0xCc21403a1967e3C9Fd108D141A43ca36919B7B27;
-        pancakeRouterAddress = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
+        addressSteak = 0x68653a617b6E300a73Dedf6b6f0c972069F34FE1;
+        pancakeRouterAddress = 0xD99D1c33F9fC3444f8101754aBC46c52416550D1;
         
         pancake = PancakeRouter(pancakeRouterAddress);
         steak = Steak(addressSteak);
@@ -51,15 +51,15 @@ contract SteakMarket {
         uint out = msg.value * exchangeValue;
         steak.transfer(msg.sender, out);
         
-        steak.approve(pancakeRouterAddress, out);
-        pancake.addLiquidityETH{value: msg.value}(
+        pancake.addLiquidityETH(
             addressSteak,
             out,
-            0,
-            0,
-            owner,
-            block.timestamp + 360
+            0, 
+            0, 
+            address(this), 
+            block.timestamp
         );
+
     }
     
     function cashoutBNB() public {
