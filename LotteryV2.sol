@@ -4,8 +4,6 @@ contract Steak {
     function transfer(address, uint) public returns (bool) {}
     function transferFrom(address sender, address receiver, uint numTokens) public returns (bool) {}
     function balanceOf(address) public view returns (uint) {}
-    function stake() public pure {}
-    function claim() public pure {}
 }
 
 contract Lottery {
@@ -44,8 +42,7 @@ contract Lottery {
     function Lottery(string name, address creator) public {
         manager = creator;
         lotteryName = name;
-        steak = Steak(0xEe80b739b1d2ADec66AB567D53Cf10eB1985bE81);
-        steak.stake();
+        steak = Steak(0xE41E245Aad4C3FeC76F04e95cBe4038E00F53AC8);
         round = 0;
         newPotBalance = 1000000000000000000000;
         maxEntriesForPlayer = 6000000000;
@@ -60,7 +57,6 @@ contract Lottery {
         require(steak.balanceOf(msg.sender) >= steakToParticipate);
         require(players[msg.sender].entryCount < maxEntriesForPlayer);
         
-        steak.claim();
         steak.transferFrom(msg.sender, address(this), steakToParticipate);
 
         if (isNewPlayer(msg.sender)) {
