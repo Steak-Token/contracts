@@ -1,38 +1,21 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.8.7;
 
-contract Steak {
-    function approve(address delegate, uint numTokens) public returns (bool) {}
-    function transfer(address, uint) public returns (bool) {}
-    function balanceOf(address) public view returns (uint) {}
-}
-
-contract PancakeRouter {
-    function addLiquidityETH(
-          address token,
-          uint amountTokenDesired,
-          uint amountTokenMin,
-          uint amountETHMin,
-          address to,
-          uint deadline
-        ) external payable returns (uint amountToken, uint amountETH, uint liquidity) {}
-}
-
-contract SteakMarket {
+contract Market {
     address addressSteak;
     address pancakeRouterAddress;
 
     Steak steak;
     PancakeRouter pancake;
 
-    address owner;
+    address payable owner;
     uint exchangeValue;
     
-    constructor(address _owner, uint _exchangeValue) public {  
+    constructor(address payable _owner, uint _exchangeValue) {  
         owner = _owner;
         exchangeValue = _exchangeValue;
         
-        addressSteak = 0x68653a617b6E300a73Dedf6b6f0c972069F34FE1;
-        pancakeRouterAddress = 0xD99D1c33F9fC3444f8101754aBC46c52416550D1;
+        addressSteak = 0xE41E245Aad4C3FeC76F04e95cBe4038E00F53AC8;
+        pancakeRouterAddress = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
         
         pancake = PancakeRouter(pancakeRouterAddress);
         steak = Steak(addressSteak);
@@ -51,12 +34,13 @@ contract SteakMarket {
         uint out = msg.value * exchangeValue;
         steak.transfer(msg.sender, out);
         
-        pancake.addLiquidityETH(
+        steak.approve(pancakeRouterAddress, out);
+        pancake.addLiquidityETH{value: msg.value}(
             addressSteak,
             out,
             0, 
             0, 
-            address(this), 
+            owner, 
             block.timestamp
         );
 
@@ -80,5 +64,22 @@ contract SteakMarket {
         return steak.balanceOf(address(this));
     }
     
-    function () public payable {}
+    fallback() external payable {}
+}
+
+contract Steak {
+    function approve(address delegate, uint numTokens) public returns (bool) {}
+    function transfer(address, uint) public returns (bool) {}
+    function balanceOf(address) public view returns (uint) {}
+}
+
+contract PancakeRouter {
+    function addLiquidityETH(
+          address token,
+          uint amountTokenDesired,
+          uint amountTokenMin,
+          uint amountETHMin,
+          address to,
+          uint deadline
+        ) external payable returns (uint amountToken, uint amountETH, uint liquidity) {}
 }
